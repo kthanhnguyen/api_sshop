@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { MONGO_URI } = require('./config')
+
+const dotenv = require('dotenv');
+dotenv.config();
 
 // Routes
 const usersRoutes = require('./routes/user.routes');
@@ -11,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 // Connet to MongoDB
-mongoose.connect(MONGO_URI, {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false

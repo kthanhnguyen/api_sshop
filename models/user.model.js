@@ -7,22 +7,22 @@ const UserSchema = new Schema({
     required: true,
   },
   password: {
-    type: String,
-    required: true,
+    type: String
   },
   email: {
     type: String,
     required: true,
   },
   roles: {
-    type: Number,
-    default: 0 //  0 = user , 1 = admin
+    type: String,
+    default: "user" //  0 = user , 1 = admin
   },
   createdAt: {
     type: Date,
     default: Date.now,
-  },
+  }
 });
+
 
 
 module.exports = mongoose.model('Users', UserSchema);
