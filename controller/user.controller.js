@@ -1,15 +1,18 @@
 // users model
 const Users = require('../models/user.model');
+const Role = require("../models/role.model");
 var jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt");
 
-const { registerValidation } = require("../middlewares/validation");
+let refreshTokens = [];
+
+const { registerValidation, loginValidation } = require("../middlewares/validation");
 
 module.exports = {
   AllUser: async (req, res) => {
     try {
       const users = await Users.find();
-      if(!users) throw Error('No Items');
+      if(!users) return res.status(400).json({ message: "No item!" });
       res.status(200).json(users);
     } catch (err) {
       res.status(400).json({ message: err });
@@ -17,42 +20,51 @@ module.exports = {
   },
   RegisterUser: async (req, res) => {
     const { error } = registerValidation(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
+    if(error) return res.status(400).json({ message: error.details[0].message });
+
+    const email = await Users.findOne({ email: req.body.email });
+    if(email) return res.status(400).json({ message: "Email already exists" });
 
     //Hash password
     const salt = await bcrypt.genSalt(10);
     const hashPass = await bcrypt.hash(req.body.password, salt);
 
     const newUser = new Users({
-      username: req.body.username,
+      email: req.body.email,
       password: hashPass,
-      email: req.body.email
+      fullname: req.body.fullname,
+      role: Role.User
     });
 
     try {
       const user = await newUser.save();
-      if(!user) throw Error('Something went wrong while saving user');
-      res.status(200).json(user);
+      if(!user) return res.status(400).json({ message: "Something went wrong while saving user" });
+      res.status(200).json({ message: "Sign up success" });
     } catch(err) {
       res.status(400).json({ message: err });
     }
   },
   LoginUser: async (req, res) => {
-    const user = await Users.findOne({ username: req.body.username });
+    const { error } = loginValidation(req.body);
+    if(error) return res.status(400).json({ message: error.details[0].message });
+
+    const user = await Users.findOne({ email: req.body.email });
     if(!user) return res.status(400).json({ message: "Authentication failed" });
 
     const validPass = await bcrypt.compare(req.body.password, user.password);
-    if(!validPass) return res.status(400).send('Invalid password!');
+    if(!validPass) return res.status(400).json({ message: "Invalid password!" });
 
-    //Create and assign token
-    const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET);
-    res.header('Authorization', token).send(token);
+    const jwtToken = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_ACCESS_TIME });
+
+    const refreshToken = jwt.sign({ _id: user._id }, process.env.TOKEN_REFRESH, { expiresIn: process.env.TOKEN_REFRESH_TIME });
   
+    refreshTokens.push(refreshToken);
+
   },
   DeleteUser: async (req, res) => {
     try {
       const user = await Users.findByIdAndDelete(req.params.id);
-      if(!user) throw Error('No user found!');
+      if(!user) return res.status(400).json({ message: "No user found!" });
       res.status(200).json({ success: true })
     } catch (err) {
       res.status(400).json({ message: err });
@@ -61,7 +73,7 @@ module.exports = {
   UpdateUser: async (req, res) => {
     try {
       const user = await Users.findByIdAndUpdate(req.params.id, req.body);
-      if(!user) throw Error('Something went wrong while updating user');
+      if(!user) return res.status(400).json({ message: "Something went wrong while updating user" });
       res.status(200).json({ success: true });
     } catch (err) {
       res.status(400).json({ message: err });
@@ -70,10 +82,27 @@ module.exports = {
   FindUser: async (req, res) => {
     try {
       const user = await Users.findById(req.params.id);
-      if(!user) throw Error('No Items');
+      if(!user) return res.status(400).json({ message: "User not found!" });
       res.status(200).json(user);
     } catch (err) {
       res.status(400).json({ message: err });
     }
+  },
+  RenewAccessToken: async (req, res) => {
+    const refreshToken = req.body.token;
+    if(!refreshToken || !refreshTokens.includes(refreshTokens)) {
+      return res.status(403).json({ message: "User not authenticated." });
+    }
+
+    jwt.verify(refreshToken, process.env.TOKEN_REFRESH, (err, user) => {
+      if(!err) {
+        const accessToken = jwt.sign(user, process.env.TOKEN_REFRESH, { expiresIn: process.env.TOKEN_REFRESH_TIME });
+        return res.status(201).json({ accessToken });
+      }
+      else {
+        return res.status(403).json({ message: "User not authenticated." });
+      }
+    })
   }
 }
+

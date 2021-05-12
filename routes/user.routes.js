@@ -16,4 +16,6 @@ router.patch('/updateUser/:id', UserControllers.UpdateUser);
 
 router.get('/findUser/:id', verifyToken, UserControllers.FindUser);
 
+router.post('/renewAccessToken', UserControllers.RenewAccessToken);
+
 module.exports = router;
