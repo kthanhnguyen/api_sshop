@@ -4,7 +4,7 @@ const Role = require("../models/role.model");
 var jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt");
 
-let refreshTokens = [];
+const { generateToken } = require("../middlewares/authJwt");
 
 const { registerValidation, loginValidation } = require("../middlewares/validation");
 
@@ -39,7 +39,7 @@ module.exports = {
     try {
       const user = await newUser.save();
       if(!user) return res.status(400).json({ message: "Something went wrong while saving user" });
-      res.status(200).json({ message: "Sign up success" });
+      res.status(200).json({ message: "Sign up Successfully." });
     } catch(err) {
       res.status(400).json({ message: err });
     }
@@ -54,11 +54,15 @@ module.exports = {
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if(!validPass) return res.status(400).json({ message: "Invalid password!" });
 
-    const jwtToken = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_ACCESS_TIME });
+    const accessToken = await generateToken(user, process.env.TOKEN_SECRET, process.env.TOKEN_ACCESS_TIME);
 
-    const refreshToken = jwt.sign({ _id: user._id }, process.env.TOKEN_REFRESH, { expiresIn: process.env.TOKEN_REFRESH_TIME });
+    const refreshToken = await generateToken(user, process.env.TOKEN_REFRESH, process.env.TOKEN_REFRESH_TIME);
   
-    refreshTokens.push(refreshToken);
+    res.status(200).json({ 
+      message: "Login Successfully.",
+      accessToken, 
+      refreshToken
+    });
 
   },
   DeleteUser: async (req, res) => {

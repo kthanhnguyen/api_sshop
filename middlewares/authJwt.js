@@ -2,8 +2,29 @@ const jwt = require("jsonwebtoken");
 
 let refreshToken = [];
 
+generateToken = (user, secretSignature, tokenLife) => {
+  return new Promise((resolve, reject) => {
+    const userData = {
+      _id: user._id
+    }
+    jwt.sign(
+      {data: userData},
+      secretSignature,
+      {
+        algorithm: "HS256",
+        expiresIn: tokenLife,
+      },
+      (error, token) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(token);
+    });
+  });
+}
+
 verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"];
+  const token = req.body.token || req.query.token || req.headers["authorization"];
 
   if (!token) return res.status(403).json({ message: "Access Denied!" });
 
@@ -35,6 +56,7 @@ verifyRefreshToken = (req, res, next) => {
 };
 
 const authJwt = {
+  generateToken,
   verifyToken
 };
 module.exports = authJwt;
