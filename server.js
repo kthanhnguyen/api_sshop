@@ -6,6 +6,7 @@ dotenv.config();
 
 // Routes
 const usersRoutes = require('./routes/user.routes');
+const productsRoutes = require('./routes/product.routes');
 
 const app = express();
 
@@ -23,6 +24,9 @@ mongoose.connect(process.env.MONGO_URI, {
 
 //  User routes
 app.use('/users', usersRoutes);
+
+//  Product routes
+app.use('/products', productsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

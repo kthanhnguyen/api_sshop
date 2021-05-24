@@ -57,9 +57,12 @@ module.exports = {
     const accessToken = await generateToken(user, process.env.TOKEN_SECRET, process.env.TOKEN_ACCESS_TIME);
 
     const refreshToken = await generateToken(user, process.env.TOKEN_REFRESH, process.env.TOKEN_REFRESH_TIME);
+
+    const userResult = await Users.findById(user._id);
   
     res.status(200).json({ 
       message: "Login Successfully.",
+      user: userResult,
       accessToken, 
       refreshToken
     });
@@ -100,8 +103,8 @@ module.exports = {
 
     jwt.verify(refreshToken, process.env.TOKEN_REFRESH, (err, user) => {
       if(!err) {
-        const accessToken = jwt.sign(user, process.env.TOKEN_REFRESH, { expiresIn: process.env.TOKEN_REFRESH_TIME });
-        return res.status(201).json({ accessToken });
+        const refreshToken = jwt.sign(user, process.env.TOKEN_REFRESH, { expiresIn: process.env.TOKEN_REFRESH_TIME });
+        return res.status(201).json({ refreshToken });
       }
       else {
         return res.status(403).json({ message: "User not authenticated." });
