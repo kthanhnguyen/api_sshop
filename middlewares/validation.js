@@ -39,7 +39,17 @@ const productValidation = data => {
   return Joi.validate(data, schema);
 }
 
+// ProductType Validation
+const productTypeValidation = data => {
+  const schema = {
+    typeName: Joi.string().min(1).required()
+  };
+
+  return Joi.validate(data, schema);
+}
+
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;
 
 module.exports.productValidation = productValidation;
+module.exports.productTypeValidation = productTypeValidation;

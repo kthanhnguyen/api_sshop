@@ -51,8 +51,12 @@ module.exports = {
   },
   UpdateProduct: async (req, res) => {
     try {
+      const body = req.body;
+      if(!body || Object.keys(body).length === 0) return res.status(400).json({ message: "Body Product not found!" });
+
       const product = await Products.findByIdAndUpdate(req.params.id, req.body);
       if(!product) return res.status(400).json({ message: "Something went wrong while updating product" });
+      
       res.status(200).json({ message: "Product has updated!" });
     } catch (err) {
       res.status(400).json({ message: err });

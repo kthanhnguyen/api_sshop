@@ -10,8 +10,8 @@ const ProductSchema = new Schema({
   color: { type: Array, required: true },
   poster: { type: Array, required: true },
   description: { type: String, required: true },
-  collections: { type: String, required: true },
-  productType: { type: String, required: true },
+  collections: { type: String, required: true }, //Jordan, Air Max
+  productType: { type: String, required: true }, //Nike, Puma,...
   createdAt: { type: Date, default: Date.now }
 });
 

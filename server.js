@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
+global.__basedir = __dirname;
+
 const dotenv = require('dotenv');
 dotenv.config();
 
 // Routes
 const usersRoutes = require('./routes/user.routes');
 const productsRoutes = require('./routes/product.routes');
+const productTypeRoutes = require('./routes/productType.routes');
+const fileRoutes = require('./routes/file.routes');
 
 const app = express();
 
@@ -22,11 +26,11 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
-//  User routes
+// Routes
 app.use('/users', usersRoutes);
-
-//  Product routes
 app.use('/products', productsRoutes);
+app.use('/productType', productTypeRoutes);
+app.use(fileRoutes);
 
 const PORT = process.env.PORT || 5000;
 
